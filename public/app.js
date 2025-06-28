@@ -444,36 +444,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         for (const pwsid in waterData) {
             const system = waterData[pwsid];
-            const geo = Object.values(system.geo_areas)[0];
-            if (geo && geo.ZIP_CODE_SERVED) {
-                const zip = String(geo.ZIP_CODE_SERVED).trim().substring(0, 5);
-                const coords = zipCodeData[zip];
-
-                if (coords && coords.lat && coords.lon) {
-                    const violationCount = Object.keys(system.violations || {}).length;
-                    let icon;
-                    if (violationCount > 0) {
-                        icon = L.divIcon({
-                            className: 'custom-div-icon',
-                            html: `<div class="marker-pin-red"></div><div class="marker-badge">${violationCount}</div>`,
-                            iconSize: [30, 42],
-                            iconAnchor: [15, 42]
-                        });
-                    } else {
-                        icon = greenIcon;
+            
+            // Try to get coordinates from geo_areas
+            let coords = null;
+            const geoAreas = system.geo_areas || {};
+            
+            // Look for ZIP_CODE_SERVED in any geo area
+            for (const geoKey in geoAreas) {
+                const geo = geoAreas[geoKey];
+                if (geo && geo.ZIP_CODE_SERVED) {
+                    const zip = String(geo.ZIP_CODE_SERVED).trim().substring(0, 5);
+                    if (zipCodeData[zip]) {
+                        coords = zipCodeData[zip];
+                        break;
                     }
-
-                    const popupContent = `<b>${system.PWS_NAME}</b><br>${violationCount > 0 ? violationCount + ' violation(s).' : 'In compliance.'}`;
-                    const marker = L.marker([parseFloat(coords.lat), parseFloat(coords.lon)], { icon: icon })
-                        .bindPopup(popupContent)
-                        .on('click', () => {
-                            displaySystemDetails(pwsid, systemDetails);
-                            map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 15);
-                        });
-                    markerLayer.addLayer(marker);
                 }
             }
+            
+            // If no ZIP found, try using the system's ZIP_CODE
+            if (!coords && system.ZIP_CODE) {
+                const zip = String(system.ZIP_CODE).trim().substring(0, 5);
+                if (zipCodeData[zip]) {
+                    coords = zipCodeData[zip];
+                }
+            }
+
+            if (coords && coords.lat && coords.lon) {
+                // Count actual violations (filter out null/empty violations)
+                const actualViolations = Object.values(system.violations || {})
+                    .filter(v => v && v.VIOLATION_ID && v.VIOLATION_STATUS !== 'Archived');
+                const violationCount = actualViolations.length;
+                
+                let icon;
+                if (violationCount > 0) {
+                    icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div class="marker-pin-red"></div><div class="marker-badge">${violationCount}</div>`,
+                        iconSize: [30, 42],
+                        iconAnchor: [15, 42]
+                    });
+                } else {
+                    icon = greenIcon;
+                }
+
+                const popupContent = `<b>${system.PWS_NAME}</b><br>PWSID: ${pwsid}<br>${violationCount > 0 ? violationCount + ' active violation(s)' : 'In compliance'}`;
+                const marker = L.marker([parseFloat(coords.lat), parseFloat(coords.lon)], { icon: icon })
+                    .bindPopup(popupContent)
+                    .on('click', () => {
+                        displaySystemDetails(pwsid, systemDetails);
+                        map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 12);
+                    });
+                markerLayer.addLayer(marker);
+            }
         }
+        console.log(`Plotted ${markerLayer.getLayers().length} water systems on the map`);
     }
 
     // --- UI Logic for Tabs and Search Hiding ---

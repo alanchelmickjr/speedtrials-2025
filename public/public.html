@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Water Compliance - Public Map</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMjgiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzAwNGQ0MCIgc3Ryb2tlLXdpZHRoPSI0Ii8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzAwNGQ0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+R0E8L3RleHQ+Cjwvc3ZnPgo=" alt="Georgia State Seal" class="state-seal">
+            <div>
+                <h1>Georgia Water Compliance - Public Map</h1>
+                <p>Public access to water system compliance information.</p>
+            </div>
+            <nav class="header-nav">
+                <a href="index.html" class="nav-link">Dashboard</a>
+                <a href="public.html" class="nav-link active">Public Map</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="public-container">
+            <div id="public-map" class="public-map"></div>
+            <div id="public-details" class="public-details">
+                <h3>Water System Information</h3>
+                <p>Click on a marker to view system details.</p>
+                <div id="public-system-table"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Codegen Speed Trials 2025</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <script src="public.js"></script>
+</body>
+</html>

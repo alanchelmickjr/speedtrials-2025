@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Water Compliance - Analytics</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMjgiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzAwNGQ0MCIgc3Ryb2tlLXdpZHRoPSI0Ii8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzAwNGQ0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+R0E8L3RleHQ+Cjwvc3ZnPgo=" alt="Georgia State Seal" class="state-seal">
+            <div>
+                <h1>Georgia Water Compliance - Analytics</h1>
+                <p>Data visualization and compliance trends.</p>
+            </div>
+            <nav class="header-nav">
+                <a href="index.html" class="nav-link">Dashboard</a>
+                <a href="public.html" class="nav-link">Public Map</a>
+                <a href="analytics.html" class="nav-link active">Analytics</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="analytics-container">
+            <div class="analytics-controls">
+                <select id="region-filter">
+                    <option value="all">All Regions</option>
+                </select>
+                <select id="violation-filter">
+                    <option value="all">All Violations</option>
+                </select>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Violations by Region</h3>
+                    <canvas id="barChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Violation Types Distribution</h3>
+                    <canvas id="pieChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Compliance Trends Over Time</h3>
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Codegen Speed Trials 2025</p>
+    </footer>
+
+    <script src="analytics.js"></script>
+</body>
+</html>

@@ -19,39 +19,48 @@
         <div class="container">
             <!-- Regulator View -->
             <div class="view-section" id="regulator-view">
-                <h2>Regulator Field Kit</h2>
-                <div class="search-container">
-                    <input type="text" id="search-input" placeholder="Search for Water System by Name or PWSID...">
-                    <div id="search-results"></div>
-                    <input type="text" id="violation-search-input" placeholder="Search by Violation Name...">
-                    <div id="violation-search-results"></div>
-                </div>
-                <hr>
-                <div id="map-container">
-                    <div id="map"></div>
-                </div>
-                <hr>
-                <div id="system-details-container">
-                    <h3>System Details</h3>
-                    <div id="system-details">
-                        <p>Select a system to view details.</p>
+                <h2 class="view-header" data-target="regulator-content">Regulator Field Kit</h2>
+                <div class="view-content" id="regulator-content">
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Search for Water System by Name or PWSID...">
+                        <div id="search-results"></div>
+                        <input type="text" id="violation-search-input" placeholder="Search by Violation Name...">
+                        <div id="violation-search-results"></div>
+                    </div>
+                    <hr>
+                    <div id="map-container">
+                        <div id="map"></div>
+                    </div>
+                    <hr>
+                    <div id="system-details-container">
+                        <h3>System Details</h3>
+                        <div id="system-details">
+                            <p>Select a system to view details.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Operator View -->
             <div class="view-section" id="operator-view">
-                <h2>Operator Dashboard</h2>
-                <div class="login-container">
-                    <input type="text" id="operator-pwsid-input" placeholder="Enter your PWSID to load dashboard...">
-                    <button id="load-operator-dashboard">Load Dashboard</button>
-                </div>
-                <hr>
-                <div id="operator-dashboard-container">
-                     <h3>Your System's Dashboard</h3>
-                     <div id="operator-details">
-                         <p>Enter your PWSID above.</p>
-                     </div>
+                <h2 class="view-header" data-target="operator-content">Operator Dashboard</h2>
+                <div class="view-content" id="operator-content">
+                    <div class="login-container">
+                        <input type="text" id="operator-pwsid-input" placeholder="Enter your PWSID to load dashboard...">
+                        <button id="load-operator-dashboard">Load Dashboard</button>
+                    </div>
+                    <hr>
+                    <div id="operator-dashboard-container">
+                         <h3>Your System's Dashboard</h3>
+                         <div id="operator-details">
+                             <p>Enter your PWSID above.</p>
+                         </div>
+                         <hr>
+                         <h3>Task List</h3>
+                         <div id="task-list">
+                             <p>No tasks assigned.</p>
+                         </div>
+                    </div>
                 </div>
             </div>
 
@@ -79,6 +88,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/gun/gun.js"></script>
     <script src="app.js"></script>
 </body>

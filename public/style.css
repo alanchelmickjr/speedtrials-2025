@@ -38,6 +38,21 @@ main {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     flex: 1;
+    transition: all 0.3s ease-in-out;
+}
+
+.view-section.collapsed {
+    flex: 0 0 50px; /* Width of the collapsed tab */
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.view-section.collapsed .view-content {
+    display: none;
+}
+
+.view-header {
+    cursor: pointer;
 }
 
 h2 {
@@ -138,17 +153,33 @@ button:hover {
     color: #c62828; /* Red for violations */
 }
 
-.message-input {
+.message-input, .task-input {
     margin-top: 1rem;
     display: flex;
     gap: 0.5rem;
+}
+
+#task-list {
+    margin-top: 1rem;
+}
+
+.task-item {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-left: 4px solid #00796b; /* Teal accent */
+    margin-bottom: 1rem;
+    background: #fff;
+}
+
+.task-item p {
+    margin: 0.5rem 0;
 }
 
 /* Chatbot Styles */
 #chatbot-container {
     display: flex;
     flex-direction: column;
-    height: 500px; /* Or adjust as needed */
+    height: calc(100% - 4rem); /* Adjust to fill vertical space */
 }
 
 #chat-history {
@@ -164,7 +195,7 @@ button:hover {
     padding: 0.75rem;
     border-radius: 8px;
     margin-bottom: 0.75rem;
-    max-width: 80%;
+    /* max-width: 80%; REMOVED for full width */
 }
 
 .user-message {
@@ -176,6 +207,15 @@ button:hover {
 .ai-message {
     background-color: #f1f1f1; /* Light Grey */
     align-self: flex-start;
+}
+
+.thought-process {
+    background-color: #e9e9e9;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
 }
 
 #chat-input-container {

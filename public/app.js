@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Successfully loaded ${Object.keys(waterData).length} water systems and ${Object.keys(zipCodeData).length} zip codes.`);
             
             initializeMap();
-            plotAllViolations();
-
+            plotAllSystems();
+            
         } catch (e) {
             console.error("Failed to load or parse data:", e);
             systemDetails.innerHTML = "<p>Error: Could not load initial data.</p>";
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchResults.innerHTML = '';
         for (const pwsid in waterData) {
             const system = waterData[pwsid];
-            if (system.PWS_NAME.toLowerCase().includes(query) || pwsid.toLowerCase().includes(query)) {
+            if ((system.PWS_NAME && system.PWS_NAME.toLowerCase().includes(query)) || pwsid.toLowerCase().includes(query)) {
                 const div = document.createElement('div');
                 div.className = 'search-result-item';
                 div.textContent = `${system.PWS_NAME} (${pwsid})`;
@@ -255,12 +255,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (const key in system.violations) {
             const v = system.violations[key];
-            const messagesContainer = document.getElementById(`messages-${v.VIOLATION_ID}`);
-            if (messagesContainer) {
-                messagesContainer.innerHTML = ''; // Clear previous messages
-                gun.get('messages').get(v.VIOLATION_ID).map().on((message) => {
-                    if (message) displayMessage(messagesContainer, message);
-                });
+            if (v && v.VIOLATION_ID) { // Check if violation and its ID exist
+                const messagesContainer = document.getElementById(`messages-${v.VIOLATION_ID}`);
+                if (messagesContainer) {
+                    messagesContainer.innerHTML = ''; // Clear previous messages
+                    gun.get('messages').get(v.VIOLATION_ID).map().on((message) => {
+                        if (message) displayMessage(messagesContainer, message);
+                    });
+                }
             }
         }
     }
@@ -404,28 +406,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Map Logic ---
+    let markerLayer; // To hold all the pins
+
+    const greenIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    const redIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
     function initializeMap() {
+        if (map) { // If map already exists, remove it to re-initialize
+            map.remove();
+        }
         map = L.map('map').setView([32.9866, -83.6479], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap'
         }).addTo(map);
+        markerLayer = L.layerGroup().addTo(map);
     }
 
-    function plotAllViolations() {
+    function plotAllSystems() {
+        if (markerLayer) {
+            markerLayer.clearLayers();
+        }
         for (const pwsid in waterData) {
             const system = waterData[pwsid];
-            if (Object.keys(system.violations).length > 0) {
-                const geo = Object.values(system.geo_areas)[0];
-                if (geo?.ZIP_CODE_SERVED) {
-                    const zip = geo.ZIP_CODE_SERVED.substring(0, 5);
-                    const coords = zipCodeData[zip];
-                    if (coords) {
-                        L.marker([parseFloat(coords.lat), parseFloat(coords.lon)])
-                            .addTo(map)
-                            .bindPopup(`<b>${system.PWS_NAME}</b><br>${Object.keys(system.violations).length} violation(s).`)
-                            .on('click', () => displaySystemDetails(pwsid, systemDetails));
+            const geo = Object.values(system.geo_areas)[0];
+            if (geo && geo.ZIP_CODE_SERVED) {
+                const zip = String(geo.ZIP_CODE_SERVED).trim().substring(0, 5);
+                const coords = zipCodeData[zip];
+
+                if (coords && coords.lat && coords.lon) {
+                    const violationCount = Object.keys(system.violations || {}).length;
+                    let icon;
+                    if (violationCount > 0) {
+                        icon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div class="marker-pin-red"></div><div class="marker-badge">${violationCount}</div>`,
+                            iconSize: [30, 42],
+                            iconAnchor: [15, 42]
+                        });
+                    } else {
+                        icon = greenIcon;
                     }
+
+                    const popupContent = `<b>${system.PWS_NAME}</b><br>${violationCount > 0 ? violationCount + ' violation(s).' : 'In compliance.'}`;
+                    const marker = L.marker([parseFloat(coords.lat), parseFloat(coords.lon)], { icon: icon })
+                        .bindPopup(popupContent)
+                        .on('click', () => {
+                            displaySystemDetails(pwsid, systemDetails);
+                            map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 15);
+                        });
+                    markerLayer.addLayer(marker);
                 }
             }
         }

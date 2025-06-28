@@ -26,33 +26,49 @@ main {
 }
 
 .container {
-    display: flex;
-    gap: 2rem;
-    max-width: 1400px;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1.5fr; /* Three columns */
+    gap: 1.5rem;
+    max-width: 95%;
     margin: 0 auto;
 }
 
-.view-section {
+#left-column, #middle-column, #ai-view {
     background-color: #fff;
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    flex: 1;
-    transition: all 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
 }
 
-.view-section.collapsed {
-    flex: 0 0 50px; /* Width of the collapsed tab */
+/* Tab Styles */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 1rem;
+}
+
+.tab-btn {
+    padding: 0.8rem 1.2rem;
     cursor: pointer;
-    overflow: hidden;
+    border: none;
+    background-color: transparent;
+    font-size: 1.1rem;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px; /* Align with container border */
 }
 
-.view-section.collapsed .view-content {
+.tab-btn.active {
+    color: #004d40;
+    border-bottom-color: #00796b;
+    font-weight: bold;
+}
+
+
+.hidden {
     display: none;
-}
-
-.view-header {
-    cursor: pointer;
 }
 
 h2 {
@@ -97,7 +113,7 @@ button:hover {
 }
 
 /* Search Results & Details */
-#search-results {
+#search-results, #operator-search-results {
     max-height: 300px;
     overflow-y: auto;
     border: 1px solid #eee;
@@ -126,10 +142,9 @@ button:hover {
 }
 
 #map {
-    height: 400px;
+    height: 350px; /* Adjusted height */
     width: 100%;
     border-radius: 8px;
-    margin-bottom: 1rem;
 }
 
 #system-details, #operator-details {
@@ -176,14 +191,19 @@ button:hover {
 }
 
 /* Chatbot Styles */
+#ai-view {
+    /* This ensures the AI view can grow and scroll independently */
+    overflow-y: auto;
+}
+
 #chatbot-container {
     display: flex;
     flex-direction: column;
-    height: calc(100% - 4rem); /* Adjust to fill vertical space */
+    /* height: 100%; */
 }
 
 #chat-history {
-    flex-grow: 1;
+    /* flex-grow: 1; */
     overflow-y: auto;
     border: 1px solid #eee;
     padding: 1rem;
@@ -225,7 +245,7 @@ button:hover {
 
 #chat-input {
     flex-grow: 1;
-    resize: none;
+    resize: vertical;
     border-radius: 4px;
     border: 1px solid #ccc;
     padding: 0.5rem;

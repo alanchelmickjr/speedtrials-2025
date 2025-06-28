@@ -5,7 +5,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const OpenAI = require('openai');
 
 const app = express();
-const port = process.env.PORT || 3012;
+const port = process.env.PORT || 3013;
 
 // --- AI Provider Setup ---
 const fireworks = new OpenAI({

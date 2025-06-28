@@ -17,54 +17,54 @@
 
     <main>
         <div class="container">
-            <!-- Regulator View -->
-            <div class="view-section" id="regulator-view">
-                <h2 class="view-header" data-target="regulator-content">Regulator Field Kit</h2>
-                <div class="view-content" id="regulator-content">
+            <!-- Left Column: Tabs -->
+            <div class="view-section" id="left-column">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="regulator-view">Regulator</button>
+                    <button class="tab-btn" data-tab="operator-view">Operator</button>
+                </div>
+
+                <!-- Regulator Tab Content -->
+                <div id="regulator-view" class="tab-content">
+                    <h2>Regulator Field Kit</h2>
                     <div class="search-container">
-                        <input type="text" id="search-input" placeholder="Search for Water System by Name or PWSID...">
+                        <input type="text" id="search-input" placeholder="Search Water System...">
                         <div id="search-results"></div>
-                        <input type="text" id="violation-search-input" placeholder="Search by Violation Name...">
+                        <input type="text" id="violation-search-input" placeholder="Search by Violation...">
                         <div id="violation-search-results"></div>
                     </div>
-                    <hr>
-                    <div id="map-container">
-                        <div id="map"></div>
-                    </div>
-                    <hr>
-                    <div id="system-details-container">
-                        <h3>System Details</h3>
-                        <div id="system-details">
-                            <p>Select a system to view details.</p>
-                        </div>
-                    </div>
                 </div>
-            </div>
 
-            <!-- Operator View -->
-            <div class="view-section" id="operator-view">
-                <h2 class="view-header" data-target="operator-content">Operator Dashboard</h2>
-                <div class="view-content" id="operator-content">
+                <!-- Operator Tab Content -->
+                <div id="operator-view" class="tab-content hidden">
+                    <h2>Operator Dashboard</h2>
                     <div class="login-container">
-                        <input type="text" id="operator-pwsid-input" placeholder="Enter your PWSID to load dashboard...">
+                        <input type="text" id="operator-pwsid-input" placeholder="Enter your PWSID...">
+                        <div id="operator-search-results"></div>
                         <button id="load-operator-dashboard">Load Dashboard</button>
                     </div>
-                    <hr>
-                    <div id="operator-dashboard-container">
-                         <h3>Your System's Dashboard</h3>
-                         <div id="operator-details">
-                             <p>Enter your PWSID above.</p>
-                         </div>
-                         <hr>
-                         <h3>Task List</h3>
-                         <div id="task-list">
-                             <p>No tasks assigned.</p>
-                         </div>
-                    </div>
+                     <hr>
+                     <h3>Your Task List</h3>
+                     <div id="task-list">
+                         <p>No tasks assigned.</p>
+                     </div>
                 </div>
             </div>
 
-            <!-- AI Assistant View -->
+            <!-- Middle Column: Map and Details -->
+            <div class="view-section" id="middle-column">
+                <h2>System Information</h2>
+                <div id="map"></div>
+                <hr>
+                <div id="system-details">
+                    <p>Select a system to view details and violations.</p>
+                </div>
+                 <div id="operator-details" class="hidden">
+                    <!-- This will be populated for the operator view -->
+                 </div>
+            </div>
+
+            <!-- Right Column: AI Assistant -->
             <div class="view-section" id="ai-view">
                 <h2>AI Compliance Assistant</h2>
                 <div id="chatbot-container">

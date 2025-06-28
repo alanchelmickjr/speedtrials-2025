@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const violationSearchResults = document.getElementById('violation-search-results');
     const systemDetails = document.getElementById('system-details');
     const operatorPwsidInput = document.getElementById('operator-pwsid-input');
+    const operatorSearchResults = document.getElementById('operator-search-results');
     const loadOperatorDashboardBtn = document.getElementById('load-operator-dashboard');
     const operatorDetails = document.getElementById('operator-details');
     const taskList = document.getElementById('task-list');
@@ -48,13 +49,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Regulator View Logic ---
+    const samplePwsids = ['GA0170001', 'GA0280000', 'GA1130001', 'GA1210001', 'GA1350002'];
+
+    operatorPwsidInput.addEventListener('focus', () => {
+        operatorSearchResults.innerHTML = '';
+        const systemsWithViolations = [];
+        for (const pwsid in waterData) {
+            if (waterData[pwsid].violations && Object.keys(waterData[pwsid].violations).length > 0) {
+                systemsWithViolations.push(pwsid);
+            }
+        }
+        const sampleViolations = systemsWithViolations.slice(0, 10);
+        sampleViolations.forEach(pwsid => {
+            const system = waterData[pwsid];
+            const div = document.createElement('div');
+            div.className = 'search-result-item';
+            div.textContent = `${system.PWS_NAME} (${pwsid})`;
+            div.dataset.pwsid = pwsid;
+            operatorSearchResults.appendChild(div);
+        });
+    });
+
+    operatorSearchResults.addEventListener('click', (e) => {
+        if (e.target.classList.contains('search-result-item')) {
+            const pwsid = e.target.dataset.pwsid;
+            operatorPwsidInput.value = pwsid;
+            operatorSearchResults.innerHTML = '';
+            loadOperatorDashboardBtn.click();
+        }
+    });
+
+    searchInput.addEventListener('focus', () => {
+        searchResults.innerHTML = '';
+        samplePwsids.forEach(pwsid => {
+            if (waterData[pwsid]) {
+                const system = waterData[pwsid];
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.textContent = `${system.PWS_NAME} (${pwsid})`;
+                div.dataset.pwsid = pwsid;
+                searchResults.appendChild(div);
+            }
+        });
+    });
+
     searchInput.addEventListener('keyup', () => {
         const query = searchInput.value.toLowerCase().trim();
+        if (!query) { // If search is empty, show samples
+            searchInput.dispatchEvent(new Event('focus'));
+            return;
+        }
+        // Filter all data for the actual search
         searchResults.innerHTML = '';
-        if (query.length < 3) return;
         for (const pwsid in waterData) {
             const system = waterData[pwsid];
-            if (system && (system.PWS_NAME?.toLowerCase().includes(query) || pwsid.toLowerCase().includes(query))) {
+            if (system.PWS_NAME.toLowerCase().includes(query) || pwsid.toLowerCase().includes(query)) {
                 const div = document.createElement('div');
                 div.className = 'search-result-item';
                 div.textContent = `${system.PWS_NAME} (${pwsid})`;
@@ -73,36 +122,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    violationSearchInput.addEventListener('keyup', () => {
-        const query = violationSearchInput.value.toLowerCase().trim();
+    violationSearchInput.addEventListener('focus', () => {
         violationSearchResults.innerHTML = '';
-        if (query.length < 4) return;
-        const matchingSystems = new Set();
+        const violationNames = new Set();
         for (const pwsid in waterData) {
             const system = waterData[pwsid];
             for (const key in system.violations) {
                 const v = system.violations[key];
-                if (v.VIOLATION_NAME?.toLowerCase().includes(query)) {
-                    matchingSystems.add(pwsid);
+                if (v.VIOLATION_NAME) {
+                    violationNames.add(v.VIOLATION_NAME);
                 }
             }
         }
-        matchingSystems.forEach(pwsid => {
-            const system = waterData[pwsid];
+        violationNames.forEach(name => {
             const div = document.createElement('div');
             div.className = 'search-result-item';
-            div.textContent = `${system.PWS_NAME} (${pwsid})`;
-            div.dataset.pwsid = pwsid;
+            div.textContent = name;
             violationSearchResults.appendChild(div);
         });
     });
 
+    violationSearchInput.addEventListener('keyup', () => {
+        const query = violationSearchInput.value.toLowerCase().trim();
+        const items = violationSearchResults.getElementsByClassName('search-result-item');
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.textContent.toLowerCase().includes(query)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    });
+
     violationSearchResults.addEventListener('click', (e) => {
         if (e.target.classList.contains('search-result-item')) {
-            const pwsid = e.target.dataset.pwsid;
-            displaySystemDetails(pwsid, systemDetails);
+            const violationName = e.target.textContent;
+            violationSearchInput.value = violationName;
             violationSearchResults.innerHTML = '';
-            violationSearchInput.value = '';
+            const matchingSystems = new Set();
+            for (const pwsid in waterData) {
+                const system = waterData[pwsid];
+                for (const key in system.violations) {
+                    const v = system.violations[key];
+                    if (v.VIOLATION_NAME === violationName) {
+                        matchingSystems.add(pwsid);
+                    }
+                }
+            }
+            searchResults.innerHTML = '';
+            matchingSystems.forEach(pwsid => {
+                const system = waterData[pwsid];
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.textContent = `${system.PWS_NAME} (${pwsid})`;
+                div.dataset.pwsid = pwsid;
+                searchResults.appendChild(div);
+            });
         }
     });
 
@@ -110,9 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
     loadOperatorDashboardBtn.addEventListener('click', () => {
         const pwsid = operatorPwsidInput.value.trim();
         if (pwsid && waterData[pwsid]) {
-            displaySystemDetails(pwsid, operatorDetails);
+            displaySystemDetails(pwsid, operatorDetails); // Display in the correct container
+            loadTasks(pwsid); // Also load tasks for the operator
         } else {
-            operatorDetails.innerHTML = `<p>System with PWSID ${pwsid} not found.</p>`;
+            systemDetails.innerHTML = `<p>System with PWSID ${pwsid} not found.</p>`;
+            operatorDetails.innerHTML = '';
         }
     });
 
@@ -122,12 +200,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const system = waterData[pwsid];
         if (!system) return;
 
+        // Always update the main system details view
+        const mainDetailsContainer = document.getElementById('system-details');
+
         const geo = Object.values(system.geo_areas)[0];
         if (geo?.ZIP_CODE_SERVED) {
             const zip = geo.ZIP_CODE_SERVED.substring(0, 5);
             const coords = zipCodeData[zip];
             if (coords && map) {
-                map.setView([coords.lat, coords.lon], 13);
+                map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 15);
             }
         }
 
@@ -157,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             violationsHtml += '<p>No violations on record. System is in compliance.</p>';
         }
 
-        container.innerHTML = `
+        mainDetailsContainer.innerHTML = `
             <h3>${system.PWS_NAME}</h3>
             <p><strong>PWSID:</strong> ${system.PWSID}</p>
             <p><strong>Population Served:</strong> ${system.POPULATION_SERVED_COUNT}</p>
@@ -175,11 +256,13 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const key in system.violations) {
             const v = system.violations[key];
             const messagesContainer = document.getElementById(`messages-${v.VIOLATION_ID}`);
-            gun.get('messages').get(v.VIOLATION_ID).map().on((message) => {
-                if (message) displayMessage(messagesContainer, message);
-            });
+            if (messagesContainer) {
+                messagesContainer.innerHTML = ''; // Clear previous messages
+                gun.get('messages').get(v.VIOLATION_ID).map().on((message) => {
+                    if (message) displayMessage(messagesContainer, message);
+                });
+            }
         }
-        if (taskList) loadTasks(system.PWSID);
     }
 
     function sendMessage(e) {
@@ -189,16 +272,16 @@ document.addEventListener('DOMContentLoaded', () => {
             gun.get('messages').get(violationId).set({
                 text: input.value.trim(),
                 timestamp: new Date().toISOString(),
-                sender: 'User'
+                sender: 'User' // This could be enhanced with roles
             });
             input.value = '';
         }
     }
 
     function displayMessage(container, message) {
-        if (!container || !message) return;
+        if (!container || !message || !message.timestamp) return;
         const existingMsg = document.getElementById(message.timestamp);
-        if (existingMsg) return;
+        if (existingMsg) return; // Prevent duplicates
         const messageEl = document.createElement('div');
         messageEl.className = 'message-item';
         messageEl.id = message.timestamp;
@@ -271,14 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `${sender}-message`;
         if (sender === 'ai') {
-            const parts = text.split('</think>');
-            if (parts.length > 1) {
-                const thinking = parts[0].replace('<think>', '');
-                const mainResponse = parts[1];
-                messageWrapper.innerHTML = `<details><summary>Show Thought Process</summary><div class="thought-process">${marked.parse(thinking)}</div></details>${marked.parse(mainResponse)}`;
-            } else {
-                messageWrapper.innerHTML = marked.parse(text);
-            }
+            // Simplified rendering for now, can add back thought process later if needed
+            messageWrapper.innerHTML = marked.parse(text);
         } else {
             messageWrapper.textContent = text;
         }
@@ -308,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadTasks(pwsid) {
+        if (!taskList) return;
         taskList.innerHTML = '';
         gun.get('tasks').get(pwsid).map().on((task) => {
             if (task) displayTask(task);
@@ -315,6 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayTask(task) {
+        if (!task || !task.id) return;
         const existingTask = document.getElementById(task.id);
         if (existingTask) existingTask.remove();
         const taskEl = document.createElement('div');
@@ -342,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const zip = geo.ZIP_CODE_SERVED.substring(0, 5);
                     const coords = zipCodeData[zip];
                     if (coords) {
-                        L.marker([coords.lat, coords.lon])
+                        L.marker([parseFloat(coords.lat), parseFloat(coords.lon)])
                             .addTo(map)
                             .bindPopup(`<b>${system.PWS_NAME}</b><br>${Object.keys(system.violations).length} violation(s).`)
                             .on('click', () => displaySystemDetails(pwsid, systemDetails));
@@ -352,23 +431,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- UI Logic for Collapsible Panels ---
-    document.querySelectorAll('.view-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const targetId = header.dataset.target;
-            const content = document.getElementById(targetId);
-            const viewSection = content.closest('.view-section');
+    // --- UI Logic for Tabs and Search Hiding ---
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-            // Toggle all sections first
-            document.querySelectorAll('.view-section').forEach(section => {
-                if (section !== viewSection) {
-                    section.classList.add('collapsed');
-                }
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
             });
-
-            // Then toggle the clicked section
-            viewSection.classList.toggle('collapsed');
+            document.getElementById(tab.dataset.tab).classList.remove('hidden');
         });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.innerHTML = '';
+        }
+        if (!violationSearchResults.contains(e.target) && e.target !== violationSearchInput) {
+            violationSearchResults.innerHTML = '';
+        }
     });
 
     // --- Load initial data when the app starts ---

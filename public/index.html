@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgia Water Compliance Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+</head>
+<body>
+    <header>
+        <h1>Georgia Water Compliance Hub</h1>
+        <p>Real-time communication for regulators and operators.</p>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Regulator View -->
+            <div class="view-section" id="regulator-view">
+                <h2>Regulator Field Kit</h2>
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Search for Water System by Name or PWSID...">
+                    <div id="search-results"></div>
+                    <input type="text" id="violation-search-input" placeholder="Search by Violation Name...">
+                    <div id="violation-search-results"></div>
+                </div>
+                <hr>
+                <div id="map-container">
+                    <div id="map"></div>
+                </div>
+                <hr>
+                <div id="system-details-container">
+                    <h3>System Details</h3>
+                    <div id="system-details">
+                        <p>Select a system to view details.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operator View -->
+            <div class="view-section" id="operator-view">
+                <h2>Operator Dashboard</h2>
+                <div class="login-container">
+                    <input type="text" id="operator-pwsid-input" placeholder="Enter your PWSID to load dashboard...">
+                    <button id="load-operator-dashboard">Load Dashboard</button>
+                </div>
+                <hr>
+                <div id="operator-dashboard-container">
+                     <h3>Your System's Dashboard</h3>
+                     <div id="operator-details">
+                         <p>Enter your PWSID above.</p>
+                     </div>
+                </div>
+            </div>
+
+            <!-- AI Assistant View -->
+            <div class="view-section" id="ai-view">
+                <h2>AI Compliance Assistant</h2>
+                <div id="chatbot-container">
+                    <div id="chat-history">
+                        <div class="ai-message">Hello! How can I help you understand these compliance issues today?</div>
+                    </div>
+                    <div id="chat-input-container">
+                        <textarea id="chat-input" placeholder="Ask about a violation, contaminant, or regulation..."></textarea>
+                        <button id="chat-send-btn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Codegen Speed Trials 2025</p>
+    </footer>
+
+    <!-- JS Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <script src="/gun/gun.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

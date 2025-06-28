@@ -1,0 +1,27 @@
+{
+  "name": "speedtrials-2025",
+  "version": "1.0.0",
+  "description": "**🚰 What's in our public drinking water? Turn Georgia's cryptic water quality data into something the public, operators, and regulators can actually use.**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alanchelmickjr/speedtrials-2025.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alanchelmickjr/speedtrials-2025/issues"
+  },
+  "homepage": "https://github.com/alanchelmickjr/speedtrials-2025#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.55.0",
+    "express": "^5.1.0",
+    "gun": "^0.2020.1240",
+    "jsonstream": "^1.0.3",
+    "openai": "^5.8.2"
+  }
+}

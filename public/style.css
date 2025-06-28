@@ -1,0 +1,197 @@
+/* General Body Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+/* Header and Footer */
+header, footer {
+    background-color: #004d40; /* Dark Teal */
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+/* Main Content Layout */
+main {
+    padding: 1rem;
+}
+
+.container {
+    display: flex;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.view-section {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex: 1;
+}
+
+h2 {
+    color: #004d40;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 1.5rem 0;
+}
+
+/* Form Elements */
+input[type="text"] {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Important for width calculation */
+    margin-bottom: 1rem;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #00796b; /* Teal */
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #004d40;
+}
+
+/* Search Results & Details */
+#search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+}
+
+.search-result-item {
+    padding: 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.search-result-item:hover, .violation-result-item:hover {
+    background-color: #e0f2f1; /* Light Teal */
+}
+
+#violation-search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+}
+
+.violation-result-item {
+    padding: 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+#system-details, #operator-details {
+    background-color: #fafafa;
+    padding: 1rem;
+    border-radius: 4px;
+    min-height: 100px;
+}
+
+/* Violation and Message Styling */
+.violation-item, .message-item {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.violation-header {
+    font-weight: bold;
+    color: #c62828; /* Red for violations */
+}
+
+.message-input {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Chatbot Styles */
+#chatbot-container {
+    display: flex;
+    flex-direction: column;
+    height: 500px; /* Or adjust as needed */
+}
+
+#chat-history {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: #fafafa;
+}
+
+.user-message, .ai-message {
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    max-width: 80%;
+}
+
+.user-message {
+    background-color: #e0f2f1; /* Light Teal */
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.ai-message {
+    background-color: #f1f1f1; /* Light Grey */
+    align-self: flex-start;
+}
+
+#chat-input-container {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#chat-input {
+    flex-grow: 1;
+    resize: none;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+}
+
+#chat-send-btn {
+    height: 100%;
+    flex-basis: 80px;
+}

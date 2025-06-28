@@ -1,3 +1,26 @@
+# 🍑 Georgia Water Compliance Hub
+
+![Georgia State Capitol](public/georgia/georgiastatecapital.tiff)
+*The Georgia State Capitol*
+
+![Georgia State Seal](public/georgia/891-004-1A660847.jpg.webp)
+
+## Our Solution
+
+We have built the **Georgia Water Compliance Hub**, a real-time platform designed to empower the public, water system operators, and regulators to monitor and address drinking water quality issues across the state.
+
+### Key Features:
+
+*   **Interactive Map:** A comprehensive, color-coded map of all public water systems in Georgia. Systems with active violations are marked in red, while compliant systems are green. Each pin is interactive, providing detailed information on click.
+*   **Violation Badges:** Systems with violations display a badge with the total number of active issues, allowing for at-a-glance identification of problem areas.
+*   **Real-Time Messaging:** A live messaging system for each violation, enabling direct communication between operators and regulators to coordinate and resolve issues.
+*   **AI-Powered Assistant:** An integrated AI chatbot that provides context-aware answers to questions about water systems, violations, and regulations.
+*   **Dedicated Dashboards:** Separate, tailored views for the public, operators, and regulators, providing the most relevant information and tools for each user group.
+
+Our solution directly addresses the challenges outlined in the Georgia Environmental Protection Division's Request for Information by transforming raw, complex data into an accessible, actionable, and collaborative platform.
+
+---
+
 # 🏁 Codegen Speed Trials - Challenge Repo 
 
 **🚰 What's in our public drinking water? Turn Georgia's cryptic water quality data into something the public, operators, and regulators can actually use.**

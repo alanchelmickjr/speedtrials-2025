@@ -1,2 +1,12 @@
-node_modules
-./node_modules
+node_modules/
+.env
+*.log
+.DS_Store
+data.json
+zip_codes.json
+public/data.json
+public/zip_codes.json
+*.pyc
+__pycache__/
+venv/
+.venv/

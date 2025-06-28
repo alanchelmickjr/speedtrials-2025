@@ -165,7 +165,28 @@ button:hover {
     border-bottom: 1px solid #eee;
 }
 
-/* Map Styles */
+/* Map Card Styles */
+.map-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    background: #fff;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.map-card.expanded {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    border: 3px solid #00796b;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    background: white;
+}
+
 .map-header {
     display: flex;
     justify-content: space-between;
@@ -208,9 +229,7 @@ button:hover {
 }
 
 .map-expanded {
-    height: 70vh;
-    position: relative;
-    z-index: 100;
+    height: calc(100vh - 150px);
 }
 
 .custom-div-icon {

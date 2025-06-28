@@ -46,7 +46,6 @@
                     <div class="login-container">
                         <input type="text" id="operator-pwsid-input" placeholder="Enter your PWSID...">
                         <div id="operator-search-results"></div>
-                        <button id="load-operator-dashboard">Load Dashboard</button>
                     </div>
                      <hr>
                      <h3>Your Task List</h3>
@@ -58,19 +57,22 @@
 
             <!-- Middle Column: Map and Details -->
             <div class="view-section" id="middle-column">
-                <div class="map-header">
-                    <h2>System Information</h2>
-                    <div class="map-controls">
-                        <button id="expand-map-btn" class="map-control-btn">🔍 Expand Map</button>
-                        <label class="filter-control">
-                            <input type="checkbox" id="show-violations-only" checked> Violations Only
-                        </label>
-                        <label class="filter-control">
-                            <input type="checkbox" id="show-compliant"> Show Compliant
-                        </label>
+                <div class="map-card">
+                    <div class="map-header">
+                        <h2>System Information</h2>
+                        <div class="map-controls">
+                            <button id="expand-map-btn" class="map-control-btn">🔍 Expand Map</button>
+                            <button id="close-map-btn" class="map-control-btn hidden">✕ Close</button>
+                            <label class="filter-control">
+                                <input type="checkbox" id="show-violations-only" checked> Violations Only
+                            </label>
+                            <label class="filter-control">
+                                <input type="checkbox" id="show-compliant"> Show Compliant
+                            </label>
+                        </div>
                     </div>
+                    <div id="map" class="map-normal"></div>
                 </div>
-                <div id="map" class="map-normal"></div>
                 <hr>
                 <div id="system-details">
                     <p>Select a system to view details and violations.</p>

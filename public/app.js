@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let zipCodeData = {};
     let map;
     let currentPwsid = null; // To track the currently viewed system for context
+    let mapExpanded = false;
+    let showViolationsOnly = true;
+    let showCompliant = false;
 
     // --- DOM Elements ---
     const searchInput = document.getElementById('search-input');
@@ -17,12 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const systemDetails = document.getElementById('system-details');
     const operatorPwsidInput = document.getElementById('operator-pwsid-input');
     const operatorSearchResults = document.getElementById('operator-search-results');
-    const loadOperatorDashboardBtn = document.getElementById('load-operator-dashboard');
     const operatorDetails = document.getElementById('operator-details');
     const taskList = document.getElementById('task-list');
     const chatHistory = document.getElementById('chat-history');
     const chatInput = document.getElementById('chat-input');
     const chatSendBtn = document.getElementById('chat-send-btn');
+    const expandMapBtn = document.getElementById('expand-map-btn');
+    const closeMapBtn = document.getElementById('close-map-btn');
+    const showViolationsOnlyCheckbox = document.getElementById('show-violations-only');
+    const showCompliantCheckbox = document.getElementById('show-compliant');
+    const mapElement = document.getElementById('map');
+    const mapCard = document.querySelector('.map-card');
 
     // --- Initial Data Load (Client-Side) ---
     async function loadData() {
@@ -48,19 +56,87 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- ESC key handler for expanded map ---
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mapExpanded) {
+            closeExpandedMap();
+        }
+    });
+
+    function closeExpandedMap() {
+        mapCard.classList.remove('expanded');
+        mapElement.className = 'map-normal';
+        expandMapBtn.classList.remove('hidden');
+        closeMapBtn.classList.add('hidden');
+        mapExpanded = false;
+        setTimeout(() => map.invalidateSize(), 300);
+    }
+
+    // --- Map Controls ---
+    expandMapBtn.addEventListener('click', () => {
+        mapCard.classList.add('expanded');
+        mapElement.className = 'map-expanded';
+        expandMapBtn.classList.add('hidden');
+        closeMapBtn.classList.remove('hidden');
+        mapExpanded = true;
+        setTimeout(() => map.invalidateSize(), 300);
+    });
+
+    closeMapBtn.addEventListener('click', closeExpandedMap);
+
+    showViolationsOnlyCheckbox.addEventListener('change', (e) => {
+        showViolationsOnly = e.target.checked;
+        plotAllSystems();
+    });
+
+    showCompliantCheckbox.addEventListener('change', (e) => {
+        showCompliant = e.target.checked;
+        plotAllSystems();
+    });
+
     // --- Regulator View Logic ---
     const samplePwsids = ['GA0170001', 'GA0280000', 'GA1130001', 'GA1210001', 'GA1350002'];
 
     operatorPwsidInput.addEventListener('focus', () => {
         operatorSearchResults.innerHTML = '';
-        const systemsWithViolations = [];
+        const categorizedSystems = {
+            pending: [],
+            active: [],
+            resolved: [],
+            compliant: []
+        };
+        
         for (const pwsid in waterData) {
-            if (waterData[pwsid].violations && Object.keys(waterData[pwsid].violations).length > 0) {
-                systemsWithViolations.push(pwsid);
+            const system = waterData[pwsid];
+            const actualViolations = Object.values(system.violations || {})
+                .filter(v => v && v.VIOLATION_ID && v.VIOLATION_NAME && v.VIOLATION_NAME !== 'Unknown Tribe');
+            
+            if (actualViolations.length === 0) {
+                categorizedSystems.compliant.push(pwsid);
+            } else {
+                const pendingViolations = actualViolations.filter(v => !v.VIOLATION_STATUS || v.VIOLATION_STATUS === 'Unaddressed' || v.VIOLATION_STATUS === 'Open');
+                const activeViolations = actualViolations.filter(v => v.VIOLATION_STATUS && v.VIOLATION_STATUS !== 'Archived' && v.VIOLATION_STATUS !== 'Resolved' && v.VIOLATION_STATUS !== 'Unaddressed' && v.VIOLATION_STATUS !== 'Open');
+                const resolvedViolations = actualViolations.filter(v => v.VIOLATION_STATUS === 'Archived' || v.VIOLATION_STATUS === 'Resolved');
+                
+                if (pendingViolations.length > 0) {
+                    categorizedSystems.pending.push(pwsid);
+                } else if (activeViolations.length > 0) {
+                    categorizedSystems.active.push(pwsid);
+                } else if (resolvedViolations.length > 0) {
+                    categorizedSystems.resolved.push(pwsid);
+                }
             }
         }
-        const sampleViolations = systemsWithViolations.slice(0, 10);
-        sampleViolations.forEach(pwsid => {
+        
+        // Show samples: 6 pending, 2 active, 1 resolved, 1 compliant
+        const sampleSystems = [
+            ...categorizedSystems.pending.slice(0, 6),
+            ...categorizedSystems.active.slice(0, 2),
+            ...categorizedSystems.resolved.slice(0, 1),
+            ...categorizedSystems.compliant.slice(0, 1)
+        ];
+        
+        sampleSystems.forEach(pwsid => {
             const system = waterData[pwsid];
             const div = document.createElement('div');
             div.className = 'search-result-item';
@@ -75,7 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const pwsid = e.target.dataset.pwsid;
             operatorPwsidInput.value = pwsid;
             operatorSearchResults.innerHTML = '';
-            loadOperatorDashboardBtn.click();
+            displaySystemDetails(pwsid, operatorDetails);
+            loadTasks(pwsid);
+            zoomToSystem(pwsid);
         }
     });
 
@@ -117,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('search-result-item')) {
             const pwsid = e.target.dataset.pwsid;
             displaySystemDetails(pwsid, systemDetails);
+            zoomToSystem(pwsid);
             searchResults.innerHTML = '';
             searchInput.value = '';
         }
@@ -129,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const system = waterData[pwsid];
             for (const key in system.violations) {
                 const v = system.violations[key];
-                if (v.VIOLATION_NAME) {
+                if (v.VIOLATION_NAME && v.VIOLATION_NAME !== 'Unknown Tribe') {
                     violationNames.add(v.VIOLATION_NAME);
                 }
             }
@@ -160,16 +239,97 @@ document.addEventListener('DOMContentLoaded', () => {
             const violationName = e.target.textContent;
             violationSearchInput.value = violationName;
             violationSearchResults.innerHTML = '';
-            const matchingSystems = new Set();
+            
+            // Show regions with this violation type in the violation search results
+            const regionsWithViolation = new Set();
             for (const pwsid in waterData) {
                 const system = waterData[pwsid];
                 for (const key in system.violations) {
                     const v = system.violations[key];
                     if (v.VIOLATION_NAME === violationName) {
-                        matchingSystems.add(pwsid);
+                        // Get region info from geo_areas
+                        const geoAreas = system.geo_areas || {};
+                        for (const geoKey in geoAreas) {
+                            const geo = geoAreas[geoKey];
+                            if (geo.COUNTY_SERVED) {
+                                regionsWithViolation.add(`${geo.COUNTY_SERVED} County`);
+                            }
+                            if (geo.CITY_SERVED) {
+                                regionsWithViolation.add(`${geo.CITY_SERVED} City`);
+                            }
+                        }
                     }
                 }
             }
+            
+            // Display regions in violation search results
+            regionsWithViolation.forEach(region => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.textContent = `${region} - ${violationName}`;
+                div.dataset.region = region;
+                div.dataset.violation = violationName;
+                violationSearchResults.appendChild(div);
+            });
+            
+            // If no regions found, show systems directly
+            if (regionsWithViolation.size === 0) {
+                const matchingSystems = new Set();
+                for (const pwsid in waterData) {
+                    const system = waterData[pwsid];
+                    for (const key in system.violations) {
+                        const v = system.violations[key];
+                        if (v.VIOLATION_NAME === violationName) {
+                            matchingSystems.add(pwsid);
+                        }
+                    }
+                }
+                matchingSystems.forEach(pwsid => {
+                    const system = waterData[pwsid];
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.textContent = `${system.PWS_NAME} (${pwsid})`;
+                    div.dataset.pwsid = pwsid;
+                    violationSearchResults.appendChild(div);
+                });
+            }
+        }
+    });
+
+    // Handle region selection to show systems
+    violationSearchResults.addEventListener('click', (e) => {
+        if (e.target.classList.contains('search-result-item') && e.target.dataset.region) {
+            const region = e.target.dataset.region;
+            const violationName = e.target.dataset.violation;
+            
+            // Find systems in this region with this violation
+            const matchingSystems = new Set();
+            for (const pwsid in waterData) {
+                const system = waterData[pwsid];
+                const geoAreas = system.geo_areas || {};
+                let inRegion = false;
+                
+                for (const geoKey in geoAreas) {
+                    const geo = geoAreas[geoKey];
+                    if ((geo.COUNTY_SERVED && region.includes(geo.COUNTY_SERVED)) ||
+                        (geo.CITY_SERVED && region.includes(geo.CITY_SERVED))) {
+                        inRegion = true;
+                        break;
+                    }
+                }
+                
+                if (inRegion) {
+                    for (const key in system.violations) {
+                        const v = system.violations[key];
+                        if (v.VIOLATION_NAME === violationName) {
+                            matchingSystems.add(pwsid);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Show systems in the first search box
             searchResults.innerHTML = '';
             matchingSystems.forEach(pwsid => {
                 const system = waterData[pwsid];
@@ -182,17 +342,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Operator View Logic ---
-    loadOperatorDashboardBtn.addEventListener('click', () => {
-        const pwsid = operatorPwsidInput.value.trim();
-        if (pwsid && waterData[pwsid]) {
-            displaySystemDetails(pwsid, operatorDetails); // Display in the correct container
-            loadTasks(pwsid); // Also load tasks for the operator
-        } else {
-            systemDetails.innerHTML = `<p>System with PWSID ${pwsid} not found.</p>`;
-            operatorDetails.innerHTML = '';
+    // --- Zoom to System Function ---
+    function zoomToSystem(pwsid) {
+        const system = waterData[pwsid];
+        if (!system) return;
+
+        let coords = null;
+        const geoAreas = system.geo_areas || {};
+        
+        for (const geoKey in geoAreas) {
+            const geo = geoAreas[geoKey];
+            if (geo && geo.ZIP_CODE_SERVED) {
+                const zip = String(geo.ZIP_CODE_SERVED).trim().substring(0, 5);
+                if (zipCodeData[zip]) {
+                    coords = zipCodeData[zip];
+                    break;
+                }
+            }
         }
-    });
+        
+        if (!coords && system.ZIP_CODE) {
+            const zip = String(system.ZIP_CODE).trim().substring(0, 5);
+            if (zipCodeData[zip]) {
+                coords = zipCodeData[zip];
+            }
+        }
+
+        if (coords && coords.lat && coords.lon && map) {
+            if (mapExpanded) {
+                closeExpandedMap();
+                setTimeout(() => {
+                    map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 12);
+                }, 300);
+            } else {
+                map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 12);
+            }
+        }
+    }
 
     // --- Shared Display & Messaging Logic ---
     function displaySystemDetails(pwsid, container) {
@@ -203,39 +389,80 @@ document.addEventListener('DOMContentLoaded', () => {
         // Always update the main system details view
         const mainDetailsContainer = document.getElementById('system-details');
 
-        const geo = Object.values(system.geo_areas)[0];
-        if (geo?.ZIP_CODE_SERVED) {
-            const zip = geo.ZIP_CODE_SERVED.substring(0, 5);
-            const coords = zipCodeData[zip];
-            if (coords && map) {
-                map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 15);
-            }
-        }
-
         let violationsHtml = '<h4>Violations</h4>';
         const violations = system.violations || {};
-        if (Object.keys(violations).length > 0) {
-            for (const key in violations) {
-                const v = violations[key];
-                violationsHtml += `
-                    <div class="violation-item">
-                        <div class="violation-header">${v.VIOLATION_NAME || 'Unknown Violation'} (${v.VIOLATION_CODE})</div>
-                        <p><strong>Contaminant:</strong> ${v.CONTAMINANT_NAME || v.CONTAMINANT_CODE || 'N/A'}</p>
-                        <p><strong>Period:</strong> ${v.NON_COMPL_PER_BEGIN_DATE || ''} to ${v.NON_COMPL_PER_END_DATE || 'Present'}</p>
-                        <p><strong>Status:</strong> ${v.VIOLATION_STATUS || ''}</p>
-                        <div class="messages-container" id="messages-${v.VIOLATION_ID}"></div>
-                        <div class="message-input">
-                            <input type="text" id="msg-input-${v.VIOLATION_ID}" placeholder="Type message...">
-                            <button class="send-btn" data-violation-id="${v.VIOLATION_ID}">Send</button>
-                        </div>
-                        <div class="task-input">
-                            <input type="text" id="task-input-${v.VIOLATION_ID}" placeholder="Create a new task...">
-                            <button class="create-task-btn" data-pwsid="${pwsid}" data-violation-id="${v.VIOLATION_ID}">Create Task</button>
-                        </div>
-                    </div>`;
+        
+        // Filter out null/empty violations and "Unknown Tribe" entries
+        const actualViolations = Object.values(violations)
+            .filter(v => v && v.VIOLATION_ID && v.VIOLATION_NAME && v.VIOLATION_NAME !== 'Unknown Tribe');
+        
+        if (actualViolations.length > 0) {
+            // Separate violations by status - prioritize pending/open first
+            const pendingViolations = actualViolations.filter(v => !v.VIOLATION_STATUS || v.VIOLATION_STATUS === 'Unaddressed' || v.VIOLATION_STATUS === 'Open');
+            const activeViolations = actualViolations.filter(v => v.VIOLATION_STATUS && v.VIOLATION_STATUS !== 'Archived' && v.VIOLATION_STATUS !== 'Resolved' && v.VIOLATION_STATUS !== 'Unaddressed' && v.VIOLATION_STATUS !== 'Open');
+            const resolvedViolations = actualViolations.filter(v => v.VIOLATION_STATUS === 'Archived' || v.VIOLATION_STATUS === 'Resolved');
+            
+            // Show pending violations first
+            if (pendingViolations.length > 0) {
+                violationsHtml += '<h5 style="color: #d32f2f;">⚠️ Pending Violations (' + pendingViolations.length + ')</h5>';
+                pendingViolations.forEach(v => {
+                    violationsHtml += `
+                        <div class="violation-item" style="border-left: 4px solid #ff5722;">
+                            <div class="violation-header">${v.VIOLATION_NAME || 'Unknown Violation'} (${v.VIOLATION_CODE || 'N/A'})</div>
+                            <p><strong>Contaminant:</strong> ${v.CONTAMINANT_NAME || v.CONTAMINANT_CODE || 'N/A'}</p>
+                            <p><strong>Period:</strong> ${v.NON_COMPL_PER_BEGIN_DATE || ''} to ${v.NON_COMPL_PER_END_DATE || 'Present'}</p>
+                            <p><strong>Status:</strong> <span style="color: #ff5722; font-weight: bold;">${v.VIOLATION_STATUS || 'Pending'}</span></p>
+                            <div class="messages-container" id="messages-${v.VIOLATION_ID}"></div>
+                            <div class="message-input">
+                                <input type="text" id="msg-input-${v.VIOLATION_ID}" placeholder="Type message...">
+                                <button class="send-btn" data-violation-id="${v.VIOLATION_ID}">Send</button>
+                            </div>
+                            <div class="task-input">
+                                <input type="text" id="task-input-${v.VIOLATION_ID}" placeholder="Create a new task...">
+                                <button class="create-task-btn" data-pwsid="${pwsid}" data-violation-id="${v.VIOLATION_ID}">Create Task</button>
+                            </div>
+                        </div>`;
+                });
+            }
+            
+            if (activeViolations.length > 0) {
+                violationsHtml += '<h5 style="color: #d32f2f;">Active Violations (' + activeViolations.length + ')</h5>';
+                activeViolations.forEach(v => {
+                    violationsHtml += `
+                        <div class="violation-item" style="border-left: 4px solid #d32f2f;">
+                            <div class="violation-header">${v.VIOLATION_NAME || 'Unknown Violation'} (${v.VIOLATION_CODE || 'N/A'})</div>
+                            <p><strong>Contaminant:</strong> ${v.CONTAMINANT_NAME || v.CONTAMINANT_CODE || 'N/A'}</p>
+                            <p><strong>Period:</strong> ${v.NON_COMPL_PER_BEGIN_DATE || ''} to ${v.NON_COMPL_PER_END_DATE || 'Present'}</p>
+                            <p><strong>Status:</strong> <span style="color: #d32f2f; font-weight: bold;">${v.VIOLATION_STATUS || 'Active'}</span></p>
+                            <div class="messages-container" id="messages-${v.VIOLATION_ID}"></div>
+                            <div class="message-input">
+                                <input type="text" id="msg-input-${v.VIOLATION_ID}" placeholder="Type message...">
+                                <button class="send-btn" data-violation-id="${v.VIOLATION_ID}">Send</button>
+                            </div>
+                            <div class="task-input">
+                                <input type="text" id="task-input-${v.VIOLATION_ID}" placeholder="Create a new task...">
+                                <button class="create-task-btn" data-pwsid="${pwsid}" data-violation-id="${v.VIOLATION_ID}">Create Task</button>
+                            </div>
+                        </div>`;
+                });
+            }
+            
+            if (resolvedViolations.length > 0) {
+                violationsHtml += '<h5 style="color: #666;">Resolved Violations (' + resolvedViolations.length + ')</h5>';
+                resolvedViolations.slice(0, 3).forEach(v => {
+                    violationsHtml += `
+                        <div class="violation-item" style="border-left: 4px solid #4caf50; opacity: 0.7;">
+                            <div class="violation-header" style="color: #666;">${v.VIOLATION_NAME || 'Unknown Violation'} (${v.VIOLATION_CODE || 'N/A'})</div>
+                            <p><strong>Period:</strong> ${v.NON_COMPL_PER_BEGIN_DATE || ''} to ${v.NON_COMPL_PER_END_DATE || 'N/A'}</p>
+                            <p><strong>Status:</strong> <span style="color: #4caf50; font-weight: bold;">${v.VIOLATION_STATUS || 'Resolved'}</span></p>
+                        </div>`;
+                });
+                if (resolvedViolations.length > 3) {
+                    violationsHtml += `<p style="color: #666; font-style: italic;">... and ${resolvedViolations.length - 3} more resolved violations</p>`;
+                }
             }
         } else {
-            violationsHtml += '<p>No violations on record. System is in compliance.</p>';
+            violationsHtml += '<p style="color: #4caf50; font-weight: bold;">✓ No violations on record. System is in compliance.</p>';
         }
 
         mainDetailsContainer.innerHTML = `
@@ -318,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             context += `The user is viewing: ${JSON.stringify(systemContext)}. Use this to answer.`;
         }
-        const finalMessage = `${context}\n\nUser Question: "${userMessage}"`;
+        const finalMessage = `${context}\\n\\nUser Question: "${userMessage}"`;
 
         try {
             const response = await fetch('/api/chat', {
@@ -333,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
-                const chunks = value.split('\n\n');
+                const chunks = value.split('\\n\\n');
                 for (const chunk of chunks) {
                     if (chunk.startsWith('data: ')) {
                         const jsonStr = chunk.substring(6);
@@ -470,10 +697,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (coords && coords.lat && coords.lon) {
-                // Count actual violations (filter out null/empty violations)
+                // Count actual violations (filter out null/empty violations and Unknown Tribe)
                 const actualViolations = Object.values(system.violations || {})
-                    .filter(v => v && v.VIOLATION_ID && v.VIOLATION_STATUS !== 'Archived');
-                const violationCount = actualViolations.length;
+                    .filter(v => v && v.VIOLATION_ID && v.VIOLATION_NAME && v.VIOLATION_NAME !== 'Unknown Tribe');
+                const activeViolations = actualViolations.filter(v => v.VIOLATION_STATUS !== 'Archived' && v.VIOLATION_STATUS !== 'Resolved');
+                const violationCount = activeViolations.length;
+                
+                // Apply filters
+                const hasViolations = violationCount > 0;
+                const isCompliant = violationCount === 0;
+                
+                if ((showViolationsOnly && !hasViolations) || (!showCompliant && isCompliant)) {
+                    continue; // Skip this system based on filters
+                }
                 
                 let icon;
                 if (violationCount > 0) {
@@ -492,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .bindPopup(popupContent)
                     .on('click', () => {
                         displaySystemDetails(pwsid, systemDetails);
-                        map.setView([parseFloat(coords.lat), parseFloat(coords.lon)], 12);
+                        zoomToSystem(pwsid);
                     });
                 markerLayer.addLayer(marker);
             }

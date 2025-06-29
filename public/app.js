@@ -418,13 +418,60 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!userMessage) return;
         appendMessage(userMessage, 'user');
         chatInput.value = '';
-        appendMessage('I can help with water compliance questions. What would you like to know?', 'ai');
+
+        let context = "You are a helpful AI assistant for water system compliance. ";
+        if (currentPwsid && waterData[currentPwsid]) {
+            const system = waterData[currentPwsid];
+            const systemContext = {
+                name: system.PWS_NAME,
+                id: system.PWSID,
+                population: system.POPULATION_SERVED_COUNT,
+                violations: Object.values(system.violations || {}).map(v => ({ name: v.VIOLATION_NAME, contaminant: v.CONTAMINANT_NAME, status: v.VIOLATION_STATUS }))
+            };
+            context += `The user is viewing: ${JSON.stringify(systemContext)}. Use this to answer.`;
+        }
+        const finalMessage = `${context}\\n\\nUser Question: "${userMessage}"`;
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: finalMessage })
+            });
+            if (!response.body) return;
+            const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+            let aiResponseContainer = appendMessage('', 'ai');
+            let accumulatedResponse = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                const chunks = value.split('\\n\\n');
+                for (const chunk of chunks) {
+                    if (chunk.startsWith('data: ')) {
+                        const jsonStr = chunk.substring(6);
+                        if (jsonStr.trim()) {
+                            const data = JSON.parse(jsonStr);
+                            accumulatedResponse += data.text;
+                            aiResponseContainer.innerHTML = marked.parse(accumulatedResponse);
+                            chatHistory.scrollTop = chatHistory.scrollHeight;
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Chat error:', error);
+            appendMessage('Sorry, I encountered an error.', 'ai');
+        }
     }
 
     function appendMessage(text, sender) {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `${sender}-message`;
-        messageWrapper.textContent = text;
+        if (sender === 'ai') {
+            messageWrapper.innerHTML = marked.parse(text);
+        } else {
+            messageWrapper.textContent = text;
+        }
         chatHistory.appendChild(messageWrapper);
         chatHistory.scrollTop = chatHistory.scrollHeight;
         return messageWrapper;

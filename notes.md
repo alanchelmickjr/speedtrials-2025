@@ -40,3 +40,27 @@
     *   [ ] Final testing.
     *   [ ] Record 2-min video highlighting the real-time collaboration.
     *   [ ] Set up `ngrok` and submit.
+
+## 5. Deployment Instructions
+
+This application has a Node.js backend, which means it cannot be deployed to a static hosting service like GitHub Pages without significant changes. The best option for easy deployment is Vercel.
+
+### Deploying to Vercel (Recommended)
+
+Vercel is a platform for hosting web applications that supports Node.js backends out of the box.
+
+**Steps:**
+
+1.  **Push to GitHub:** Make sure all your latest code is pushed to a GitHub repository.
+2.  **Sign up for Vercel:** Create a free account at [vercel.com](https://vercel.com) using your GitHub account.
+3.  **Import Project:**
+    *   On your Vercel dashboard, click "Add New..." -> "Project".
+    *   Select your GitHub repository.
+4.  **Configure Project:**
+    *   Vercel should automatically detect that you are using Node.js and configure the build settings correctly.
+    *   **IMPORTANT:** You must add your `FIREWORKS_API_KEY` as an environment variable. Go to the "Settings" tab of your new Vercel project, find "Environment Variables", and add a new variable with the name `FIREWORKS_API_KEY` and the value of your actual key.
+5.  **Deploy:** Click the "Deploy" button. Vercel will build and deploy your application. You will be given a public URL once it's finished.
+
+### Why Not GitHub Pages?
+
+GitHub Pages is designed for **static websites** (HTML, CSS, client-side JavaScript). It does not run server-side code, so it cannot run the `Node.js` server (`server.js`) that powers the chatbot API and the `gun.js` backend.

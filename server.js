@@ -1,7 +1,6 @@
 const express = require('express');
 const Gun = require('gun');
 const path = require('path');
-const Anthropic = require('@anthropic-ai/sdk');
 const OpenAI = require('openai');
 
 const app = express();
@@ -13,9 +12,6 @@ const fireworks = new OpenAI({
   baseURL: 'https://api.fireworks.ai/inference/v1',
 });
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'YOUR_ANTHROPIC_API_KEY', // Keep for future use
-});
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -34,7 +30,7 @@ app.get('/zip_codes.json', (req, res) => {
 
 // --- Modular Chatbot API Endpoint ---
 app.post('/api/chat', async (req, res) => {
-    const { message, provider = 'fireworks' } = req.body; // Default to fireworks
+    const { message } = req.body;
 
     if (!message) {
         return res.status(400).json({ error: 'Message is required' });
@@ -45,36 +41,20 @@ app.post('/api/chat', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     try {
-        let stream;
-        if (provider === 'fireworks') {
-            stream = await fireworks.chat.completions.create({
-                model: 'accounts/fireworks/models/deepseek-r1-0528',
-                messages: [{ role: 'user', content: message }],
-                stream: true,
-            });
-            for await (const chunk of stream) {
-                const text = chunk.choices[0]?.delta?.content || '';
-                if (text) {
-                    res.write(`data: ${JSON.stringify({ text })}\n\n`);
-                }
+        const stream = await fireworks.chat.completions.create({
+            model: 'accounts/fireworks/models/deepseek-r1-0528',
+            messages: [{ role: 'user', content: message }],
+            stream: true,
+        });
+        for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content || '';
+            if (text) {
+                res.write(`data: ${JSON.stringify({ text })}\n\n`);
             }
-        } else if (provider === 'anthropic') {
-            stream = await anthropic.messages.stream({
-                messages: [{ role: 'user', content: message }],
-                model: 'claude-3-haiku-20240307',
-                max_tokens: 1024,
-            });
-            for await (const event of stream) {
-                if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-                    res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
-                }
-            }
-        } else {
-            return res.status(400).json({ error: 'Invalid AI provider specified.' });
         }
     } catch (error) {
-        console.error(`Error with ${provider} API:`, error);
-        res.status(500).json({ error: `Failed to get response from ${provider}` });
+        console.error(`Error with fireworks API:`, error);
+        res.status(500).json({ error: `Failed to get response from fireworks` });
     } finally {
         res.end();
     }

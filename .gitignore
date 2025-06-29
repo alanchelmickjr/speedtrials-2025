@@ -10,3 +10,5 @@ public/zip_codes.json
 __pycache__/
 venv/
 .venv/
+speedtrials.mov
+*.mov
